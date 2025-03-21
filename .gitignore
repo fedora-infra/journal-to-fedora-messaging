@@ -44,3 +44,6 @@ docs/_source/
 
 # Database
 *.db
+
+# Local files
+fedora-messaging.toml
