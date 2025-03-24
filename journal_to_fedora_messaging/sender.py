@@ -79,13 +79,11 @@ class MessageSender:
         schema = self._get_schema(data)
         if schema is None:
             # LOGGER.debug("Unmatched log: %r", data)
-            # return defer.succeed(None)
-            return
-
-        LOGGER.debug("Republishing %r", data)
-        # _init_twisted_service()
+            return defer.succeed(None)
 
         message = schema(body=_get_body(data))
+
+        LOGGER.debug("Publishing message %s on %s: %r", message.id, message.topic, message.body)
 
         timeout = self._config.get("publish_timeout", 30)
 
@@ -105,6 +103,7 @@ class MessageSender:
                     f"Unknown error publishing message {message.id}: "
                     f"{failure.value} ({failure.type})"
                 )
+                LOGGER.error(failure.getTraceback())
 
         def _log_success(_result):
             LOGGER.info(f"Published message {message.id} on {message.topic}")
@@ -112,5 +111,4 @@ class MessageSender:
         deferred = twisted_publish(message)
         deferred.addTimeout(timeout, reactor)
         deferred.addCallbacks(_log_success, _log_errors)
-        print(deferred, deferred.result)
         return deferred
