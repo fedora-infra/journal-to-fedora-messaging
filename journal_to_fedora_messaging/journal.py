@@ -20,7 +20,7 @@ class JournalReader:
     def __init__(self, config):
         self.config = config
         self._command = self.config.get("journalctl_command", ["journalctl"])[:]
-        self._command.extend(["--follow", "--output", "json"])
+        self._command.extend(["--follow", "--output", "json", "--since", "now"])
         self.consumer = None
         self._protocol = None
 
