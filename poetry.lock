@@ -1193,18 +1193,14 @@ name = "journal-to-fedora-messaging-messages"
 version = "1.0.0"
 description = "A schema package for messages sent by Journal to Fedora Messaging"
 optional = false
-python-versions = "^3.9"
-files = []
-develop = false
+python-versions = "<4.0,>=3.9"
+files = [
+    {file = "journal_to_fedora_messaging_messages-1.0.0-py3-none-any.whl", hash = "sha256:11f7cea79361a7b5dd689cddc2f4636b2da1e4b5e83226d2fd4f048757810f8e"},
+    {file = "journal_to_fedora_messaging_messages-1.0.0.tar.gz", hash = "sha256:c58d13008fc4d16dd93eb3117af798241a9ec5095368d393e236d205729a123d"},
+]
 
 [package.dependencies]
-fedora-messaging = "^3.3.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/fedora-infra/journal-to-fedora-messaging-messages.git"
-reference = "HEAD"
-resolved_reference = "dfe35a06ca5d7a9252340f17b680ed0b57479fa1"
+fedora-messaging = ">=3.3.0,<4.0.0"
 
 [[package]]
 name = "jsonschema"
@@ -3050,4 +3046,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "58b5abaa25b1afff4a60c0fa2c82d5acea2e4e83986f5e31a172163d27394124"
+content-hash = "6cad06c4d21a4132799c6763874915de2a8884a7828620e3eff126e73bf9de96"
