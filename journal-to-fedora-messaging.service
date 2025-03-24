@@ -1,0 +1,12 @@
+[Unit]
+Description=Journal to Fedora Messaging
+Documentation=https://github.com/fedora-infra/journal-to-fedora-messaging
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/journal-to-fedora-messaging
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
