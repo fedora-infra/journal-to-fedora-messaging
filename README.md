@@ -1,6 +1,6 @@
 # Journal To Fedora Messaging
 
-This is where you describe Journal To Fedora Messaging.
+This application relays messages coming from systemd's journal to Fedora Messaging.
 
 The full documentation is [on ReadTheDocs](https://journal-to-fedora-messaging.readthedocs.io).
 
