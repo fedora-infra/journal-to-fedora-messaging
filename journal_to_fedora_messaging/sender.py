@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import asyncio
 import logging
 
 from fedora_messaging.api import twisted_publish
 from fedora_messaging.exceptions import ConnectionException, PublishReturned
-from fedora_messaging.message import get_class
-from twisted.internet import defer
+from fedora_messaging.message import get_class, Message
+from twisted.internet import defer, interfaces, reactor
+from twisted.python.failure import Failure
+from zope.interface import implementer
 
 
 LOGGER = logging.getLogger(__name__)
@@ -40,16 +41,20 @@ def _get_body(content: dict):
     return body
 
 
-class MessageSender:
+@implementer(interfaces.IConsumer)
+class LogMessageConsumer:
     def __init__(self, config):
-        self.config = config
+        self._config = config
+        self._producer = None
 
     def validate_config(self):
-        if not self.config.get("logs", []):
+        if not self._config.get("logs", []):
             LOGGER.warning("No log defined in the configuration, nothing will be published")
-        for log in self.config.get("logs", []):
+        for log in self._config.get("logs", []):
             if not log["schema"]:
                 raise ValueError(f"No schema defined in the configuration for: {log!r}")
+            if get_class(log["schema"]) == Message:
+                raise ValueError(f"The schema {log['schema']} is not installed")
             if not log.get("filters", []):
                 LOGGER.warning(
                     f"No filters defined in the configuration for: {log!r}. "
@@ -57,30 +62,54 @@ class MessageSender:
                 )
 
     def _get_schema(self, content: dict):
-        for log in self.config["logs"]:
+        for log in self._config["logs"]:
             if _matches(log, content):
                 return get_class(log["schema"])
         return None
 
-    def send(self, content: dict):
-        schema = self._get_schema(content)
+    def registerProducer(self, producer, streaming):
+        self._producer = producer
+        producer.consumer = self
+
+    def unregisterProducer(self):
+        self._producer.consumer = None
+        self._producer = None
+
+    def write(self, data: dict):
+        schema = self._get_schema(data)
         if schema is None:
-            LOGGER.debug("Unmatched log: %r", content)
-            return defer.succeed(None)
+            # LOGGER.debug("Unmatched log: %r", data)
+            # return defer.succeed(None)
+            return
 
-        LOGGER.debug("Republishing %r", content)
-        message = schema(body=_get_body(content))
+        LOGGER.debug("Republishing %r", data)
+        # _init_twisted_service()
 
-        def _log_errors(failure):
+        message = schema(body=_get_body(data))
+
+        timeout = self._config.get("publish_timeout", 30)
+
+        def _log_errors(failure: Failure):
             if failure.check(PublishReturned):
                 LOGGER.warning(
                     f"Fedora Messaging broker rejected message {message.id}: {failure.value}"
                 )
             elif failure.check(ConnectionException):
                 LOGGER.warning(f"Error sending message {message.id}: {failure.value}")
+            elif failure.check(defer.TimeoutError):
+                LOGGER.warning(
+                    f"Timeout sending message {message.id} on {message.topic} after {timeout}s"
+                )
             else:
-                LOGGER.error(f"Unknown error publishing message {message.id}: {failure.value}")
+                LOGGER.error(
+                    f"Unknown error publishing message {message.id}: "
+                    f"{failure.value} ({failure.type})"
+                )
+
+        def _log_success(result):
+            LOGGER.info(f"Published message {message.id} on {message.topic}")
 
         deferred = twisted_publish(message)
-        deferred.addErrback(_log_errors)
-        return deferred.asFuture(asyncio.get_running_loop())
+        deferred.addTimeout(timeout, reactor)
+        deferred.addCallbacks(_log_success, _log_errors)
+        return deferred

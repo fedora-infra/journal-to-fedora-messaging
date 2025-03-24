@@ -1107,7 +1107,7 @@ fedora-messaging = "^3.3.0"
 type = "git"
 url = "https://github.com/fedora-infra/journal-to-fedora-messaging-messages.git"
 reference = "HEAD"
-resolved_reference = "e88d7672f1e1c7ddc08412f1b9d550b2498f1782"
+resolved_reference = "77d2b9d21bd2153f44ce2176f1e133fcaf5e72f6"
 
 [[package]]
 name = "jsonschema"

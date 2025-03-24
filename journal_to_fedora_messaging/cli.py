@@ -2,15 +2,30 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import asyncio
 import logging
 import os
 
 import click
-import fedora_messaging
+from twisted.internet import asyncioreactor, error
+
+
+try:
+    asyncioreactor.install()
+except error.ReactorAlreadyInstalledError:
+    # The tests install a reactor before importing this module
+    from twisted.internet import reactor
+
+    if not isinstance(reactor, asyncioreactor.AsyncioSelectorReactor):
+        raise
+
+from fedora_messaging.api import _init_twisted_service
+from fedora_messaging.config import conf as fm_config
+from fedora_messaging.exceptions import ConfigurationException
+from twisted.application import service
+from twisted.internet import reactor
 
 from .journal import JournalReader
-from .sender import MessageSender
+from .sender import LogMessageConsumer
 
 
 LOGGER = logging.getLogger(__name__)
@@ -23,27 +38,28 @@ def main(config):
         if not os.path.isfile(config):
             raise click.exceptions.BadParameter(f"{config} is not a file")
         try:
-            fedora_messaging.config.conf.load_config(config_path=config)
-        except fedora_messaging.exceptions.ConfigurationException as e:
+            fm_config.load_config(config_path=config)
+        except ConfigurationException as e:
             raise click.exceptions.BadParameter(str(e)) from e
-    fedora_messaging.config.conf.setup_logging()
+    fm_config.setup_logging()
 
-    # Now start the consumer.
-    conf = fedora_messaging.config.conf["consumer_config"]
-
-    sender = MessageSender(conf)
-    sender.validate_config()
-
-    reader = JournalReader(conf)
-
-    with asyncio.Runner() as runner:
-        try:
-            runner.run(run(reader, sender))
-        except KeyboardInterrupt:
-            click.echo("\rShutting down")
-            runner.get_loop().run_until_complete(reader.stop())
+    conf = fm_config["consumer_config"]
+    bridge_service = JournalToFedoraMessagingService(conf)
+    reactor.callWhenRunning(bridge_service.startService)
+    _init_twisted_service()
+    reactor.run()
 
 
-async def run(reader, sender):
-    async for log in reader.read():
-        await sender.send(log)
+class JournalToFedoraMessagingService(service.Service):
+
+    def __init__(self, config):
+        self._consumer = LogMessageConsumer(config)
+        self._producer = JournalReader(config)
+
+    def startService(self):
+        self._consumer.registerProducer(self._producer, True)
+        self._producer.resumeProducing()
+
+    def stopService(self):
+        self._producer.stopProducing()
+        self._consumer.unregisterProducer()

@@ -2,39 +2,64 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import asyncio
 import json
 import logging
+import os
+from shutil import which
+
+from twisted.internet import interfaces, protocol, reactor
+from zope.interface import implementer
 
 
 LOGGER = logging.getLogger(__name__)
 
 
+@implementer(interfaces.IPushProducer)
 class JournalReader:
 
     def __init__(self, config):
         self.config = config
-        self._command = self.config.get("journalctl", ["journalctl"])[:]
+        self._command = self.config.get("journalctl_command", ["journalctl"])[:]
         self._command.extend(["--follow", "--output", "json"])
-        self._proc = None
+        self.consumer = None
+        self._protocol = None
 
-    async def read(self):
-        self._proc = await asyncio.create_subprocess_exec(
-            *self._command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL
+    def resumeProducing(self):
+        if self.consumer is None:
+            raise RuntimeError("No consumer to produce to")
+        self._protocol = JournalProtocol(self.consumer)
+        reactor.spawnProcess(
+            self._protocol, which(self._command[0]), args=self._command, env=os.environ
         )
 
-        while not self._proc.stdout.at_eof():
-            content = await self._proc.stdout.readline()
-            if not content:
-                break
-            yield json.loads(content)
+    def stopProducing(self):
+        self._protocol.transport.signalProcess("TERM")
+        self._protocol.transport.loseConnection()
 
-        LOGGER.info("journalctl stopped producing output")
-        await self._proc.wait()
-        LOGGER.info("journalctl exited with status %s", self._proc.returncode)
 
-    async def stop(self):
-        if self._proc is None:
-            return
-        self._proc.terminate()
-        await self._proc.wait()
+class JournalProtocol(protocol.ProcessProtocol):
+    def __init__(self, consumer: interfaces.IConsumer):
+        self._consumer = consumer
+        self._delimiter = b"\n"
+        self._buffer = b""
+
+    def connectionMade(self):
+        self.transport.closeStdin()
+
+    def outReceived(self, data):
+        lines = (self._buffer + data).split(self._delimiter)
+        self._buffer = lines.pop(-1)
+        for line in lines:
+            self._consumer.write(json.loads(line))
+
+    def errReceived(self, data):
+        LOGGER.warning(f"journalctl wrote to stderr: {data.decode()}")
+
+    def outConnectionLost(self):
+        LOGGER.debug("journalctl stopped producing output")
+
+    def processExited(self, reason):
+        LOGGER.info("journalctl exited with status %s", reason.value.exitCode)
+
+    def processEnded(self, reason):
+        LOGGER.info("journalctl ended with status %s", reason.value.exitCode)
