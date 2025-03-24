@@ -15,7 +15,7 @@ except error.ReactorAlreadyInstalledError:
     # The tests install a reactor before importing this module
     from twisted.internet import reactor
 
-    if not isinstance(reactor, asyncioreactor.AsyncioSelectorReactor):
+    if not isinstance(reactor, asyncioreactor.AsyncioSelectorReactor):  # pragma: no cover
         raise
 
 from fedora_messaging.api import _init_twisted_service
@@ -25,7 +25,7 @@ from twisted.application import service
 from twisted.internet import reactor
 
 from .journal import JournalReader
-from .sender import LogMessageConsumer
+from .sender import MessageSender
 
 
 LOGGER = logging.getLogger(__name__)
@@ -53,10 +53,11 @@ def main(config):
 class JournalToFedoraMessagingService(service.Service):
 
     def __init__(self, config):
-        self._consumer = LogMessageConsumer(config)
+        self._consumer = MessageSender(config)
         self._producer = JournalReader(config)
 
     def startService(self):
+        self._consumer.validate_config()
         self._consumer.registerProducer(self._producer, True)
         self._producer.resumeProducing()
 

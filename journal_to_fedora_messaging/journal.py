@@ -50,7 +50,10 @@ class JournalProtocol(protocol.ProcessProtocol):
         lines = (self._buffer + data).split(self._delimiter)
         self._buffer = lines.pop(-1)
         for line in lines:
-            self._consumer.write(json.loads(line))
+            try:
+                self._consumer.write(json.loads(line))
+            except json.decoder.JSONDecodeError as e:
+                LOGGER.warning(f"journalctl did not produce JSON! {e}")
 
     def errReceived(self, data):
         LOGGER.warning(f"journalctl wrote to stderr: {data.decode()}")

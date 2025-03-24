@@ -42,7 +42,7 @@ def _get_body(content: dict):
 
 
 @implementer(interfaces.IConsumer)
-class LogMessageConsumer:
+class MessageSender:
     def __init__(self, config):
         self._config = config
         self._producer = None
@@ -51,7 +51,7 @@ class LogMessageConsumer:
         if not self._config.get("logs", []):
             LOGGER.warning("No log defined in the configuration, nothing will be published")
         for log in self._config.get("logs", []):
-            if not log["schema"]:
+            if not log.get("schema"):
                 raise ValueError(f"No schema defined in the configuration for: {log!r}")
             if get_class(log["schema"]) == Message:
                 raise ValueError(f"The schema {log['schema']} is not installed")
@@ -106,10 +106,11 @@ class LogMessageConsumer:
                     f"{failure.value} ({failure.type})"
                 )
 
-        def _log_success(result):
+        def _log_success(_result):
             LOGGER.info(f"Published message {message.id} on {message.topic}")
 
         deferred = twisted_publish(message)
         deferred.addTimeout(timeout, reactor)
         deferred.addCallbacks(_log_success, _log_errors)
+        print(deferred, deferred.result)
         return deferred
