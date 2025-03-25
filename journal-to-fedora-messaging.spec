@@ -1,0 +1,59 @@
+# Many of the test requirements are not in epel9 yet
+%if 0%{?rhel} && 0%{?rhel} <= 9
+%bcond_with tests
+%else
+%bcond_without tests
+%endif
+
+Name:           journal-to-fedora-messaging
+Version:        0.1.0
+Release:        %autorelease
+Summary:        Relay journal entries to Fedora Messaging
+License:        GPL-3.0-or-later
+URL:            https://github.com/fedora-infra/journal-to-fedora-messaging
+Source0:        %{pypi_source %{name}}
+
+BuildArch:      noarch
+
+BuildRequires:  python%{python3_pkgversion}-devel
+
+%if %{with tests}
+# Test dependencies
+BuildRequires:  python3-pytest
+BuildRequires:  python3-pytest-cov
+BuildRequires:  python3-pytest-twisted
+%endif
+
+%description
+This application relays messages coming from systemd's journal to Fedora Messaging.
+
+
+%prep
+%autosetup -p1
+
+%generate_buildrequires
+%pyproject_buildrequires
+
+%build
+%pyproject_wheel
+
+%install
+%pyproject_install
+%pyproject_save_files journal_to_fedora_messaging
+
+
+%check
+%if %{with tests}
+%{__python3} -m pytest tests
+%endif
+
+
+%files -f %{pyproject_files}
+%{!?_licensedir:%global license %%doc}
+%license LICENSES/*
+%doc README.md *.example
+%{_bindir}/%{name}
+
+
+%changelog
+%autochangelog

@@ -4,7 +4,7 @@ SPDX-PackageSupplier = "Fedora Infrastructure <admin@fedoraproject.org>"
 SPDX-PackageDownloadLocation = "http://github.com/fedora-infra/journal-to-fedora-messaging"
 
 [[annotations]]
-path = ["**.yaml", "**.yml", "**.md", "**.toml", "**.toml.example", "*.service", ".gitignore", "**.ini", "Vagrantfile", ".s2i/**", ".github/**", "devel/ansible/**", "docs/**"]
+path = ["**.yaml", "**.yml", "**.md", "**.toml", "**.toml.example", "*.service", "*.spec", ".gitignore", "**.ini", "Vagrantfile", ".s2i/**", ".github/**", "devel/ansible/**", "docs/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2025 Contributors to the Fedora Project"
 SPDX-License-Identifier = "GPL-3.0-or-later"
