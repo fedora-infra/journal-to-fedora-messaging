@@ -14,8 +14,10 @@ certfile = "/my/client/cert.pem"
     journalctl_command = ["journalctl"]
 
     [[consumer_config.logs]]
+    # This is the name of the entry point in the python package metadata
     schema = "journal_to_fedora_messaging_messages.foo:FooV1"
     [consumer_config.logs.filters]
+    # All the filters must match to forward the message
     SYSLOG_IDENTIFIER = "foo"
 
     [[consumer_config.logs]]
