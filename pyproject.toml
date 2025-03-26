@@ -20,7 +20,7 @@ include = [
     { path = "tests", format = "sdist" },
     { path = "docs", format = "sdist" },
     { path = "*.example", format = "sdist" },
-
+    { path = "*.service", format = "sdist" },
 ]
 
 classifiers = [

@@ -51,7 +51,7 @@ This application relays messages coming from systemd's journal to Fedora Messagi
 %files -f %{pyproject_files}
 %{!?_licensedir:%global license %%doc}
 %license LICENSES/*
-%doc README.md *.example
+%doc README.md *.example *.service
 %{_bindir}/%{name}
 
 
