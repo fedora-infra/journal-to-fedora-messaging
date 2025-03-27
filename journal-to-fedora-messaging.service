@@ -7,6 +7,8 @@ Type=simple
 ExecStart=/usr/bin/journal-to-fedora-messaging
 Restart=on-failure
 RestartSec=60
+User=journal2fedmsg
+Group=journal2fedmsg
 
 [Install]
 WantedBy=multi-user.target
