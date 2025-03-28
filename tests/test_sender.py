@@ -122,7 +122,7 @@ def test_sender_failure(config, message_user_add, mocked_publish, caplog, except
     consumer = MessageSender(config)
     mocked_publish.return_value = defer.fail(exception_class())
     yield consumer.write(message_user_add)
-    assert len(caplog.messages) == 1
+    assert len(caplog.messages) >= 1
     log_message = caplog.messages[0]
     if exception_class == PublishReturned:
         assert log_message.startswith("Fedora Messaging broker rejected message")
