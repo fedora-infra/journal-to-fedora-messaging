@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "journal-to-fedora-messaging"
-version = "0.1.0"
+version = "1.0.0"
 description = "Relay journal entries to Fedora Messaging"
 
 license = "GPL-3.0-or-later"

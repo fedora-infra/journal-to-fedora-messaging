@@ -6,7 +6,7 @@
 %endif
 
 Name:           journal-to-fedora-messaging
-Version:        0.1.0
+Version:        1.0.0
 Release:        %autorelease
 Summary:        Relay journal entries to Fedora Messaging
 License:        GPL-3.0-or-later
