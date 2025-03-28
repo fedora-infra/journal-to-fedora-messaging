@@ -44,6 +44,7 @@ This application relays messages coming from systemd's journal to Fedora Messagi
 %install
 %pyproject_install
 %pyproject_save_files journal_to_fedora_messaging
+install -p -D -m 0644 %{name}.service %{buildroot}%{_unitdir}/%{name}.service
 install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
 
 
@@ -56,12 +57,22 @@ install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
 %pre
 %sysusers_create_compat %{SOURCE1}
 
+%post
+%systemd_post %{name}.service
+
+%preun
+%systemd_preun %{name}.service
+
+%postun
+%systemd_postun_with_restart %{name}.service
+
 
 %files -f %{pyproject_files}
 %{!?_licensedir:%global license %%doc}
 %license LICENSES/*
-%doc README.md *.example *.service
+%doc README.md *.example
 %{_bindir}/%{name}
+%{_unitdir}/%{name}.service
 %{_sysusersdir}/%{name}.conf
 
 
