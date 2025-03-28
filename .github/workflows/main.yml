@@ -92,7 +92,7 @@ jobs:
         run: git config --global --add safe.directory $PWD
 
       - name: Run the tests
-        run: tox -e ${{ matrix.pyver }}-unit
+        run: tox -e ${{ matrix.pyver }}
 
       # - name: Upload coverage to Codecov
       #   uses: codecov/codecov-action@v1
