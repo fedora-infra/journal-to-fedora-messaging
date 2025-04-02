@@ -36,6 +36,12 @@ repos:
     hooks:
       - id: reuse
 
+  # Update the version in the specfile
+  - repo: https://github.com/fedora-infra/shared
+    rev: main
+    hooks:
+      - id: update-specfile
+
   # Hooks that need to be able to import the app
   - repo: local
     hooks:
