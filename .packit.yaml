@@ -29,16 +29,16 @@ actions:
     # - "sh -c 'curl -sSL https://install.python-poetry.org | python3 -'"
     # - "sh -c '$HOME/.local/bin/poetry --version'"
     - bash -c 'which poetry || (curl -sSL https://install.python-poetry.org | python3 - && echo "export PATH=$PATH:$HOME/.local/bin" >> $HOME/.bashrc)'
-    - poetry --version
+    - bash -c 'poetry --version'
   create-archive:
     # - "sh -c '$HOME/.local/bin/poetry build -f sdist'"
     # - "sh -c 'echo dist/journal_to_fedora_messaging-$($HOME/.local/bin/poetry version -s).tar.gz'"
-    - poetry build -f sdist
-    - "sh -c 'echo dist/journal_to_fedora_messaging-$(poetry version -s).tar.gz'"
+    - bash -c 'poetry build -f sdist'
+    - "bash -c 'echo dist/journal_to_fedora_messaging-$(poetry version -s).tar.gz'"
   get-current-version:
     # fetch the version number of the package
     # - "sh -c '$HOME/.local/bin/poetry version -s'"
-    - poetry version -s
+    - bash -c 'poetry version -s'
 
 jobs:
   # upon upstream PRs, perform COPR builds
