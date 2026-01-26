@@ -11,7 +11,6 @@ from twisted.internet import defer, interfaces, reactor
 from twisted.python.failure import Failure
 from zope.interface import implementer
 
-
 LOGGER = logging.getLogger(__name__)
 
 PRUNE_FROM_LOG = (

@@ -8,7 +8,6 @@ import os
 import click
 from twisted.internet import asyncioreactor, error
 
-
 try:
     asyncioreactor.install()
 except error.ReactorAlreadyInstalledError:
@@ -26,7 +25,6 @@ from twisted.internet import reactor
 
 from .journal import JournalReader
 from .sender import MessageSender
-
 
 LOGGER = logging.getLogger(__name__)
 

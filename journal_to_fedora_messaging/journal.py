@@ -10,7 +10,6 @@ from shutil import which
 from twisted.internet import interfaces, protocol, reactor
 from zope.interface import implementer
 
-
 LOGGER = logging.getLogger(__name__)
 
 
